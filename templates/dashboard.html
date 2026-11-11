@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<!-- Metric Cards Row matching Figure 5.3 -->
+<div class="metrics-grid">
+    <div class="metric-card">
+        <div class="metric-icon-box icon-purple">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+            </svg>
+        </div>
+        <div class="metric-info">
+            <div class="metric-label">Total Customers</div>
+            <div class="metric-value">{{ total_customers }}</div>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon-box icon-green">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="5" width="20" height="14" rx="2"></rect>
+                <line x1="2" y1="10" x2="22" y2="10"></line>
+            </svg>
+        </div>
+        <div class="metric-info">
+            <div class="metric-label">Active Accounts</div>
+            <div class="metric-value">{{ active_accounts }}</div>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon-box icon-purple">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="1" x2="12" y2="23"></line>
+                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+            </svg>
+        </div>
+        <div class="metric-info">
+            <div class="metric-label">Total Balance</div>
+            <div class="metric-value">${{ "{:,.2f}".format(total_balance) }}</div>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon-box icon-orange">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="17 1 21 5 17 9"></polyline>
+                <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
+                <polyline points="7 23 3 19 7 15"></polyline>
+                <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
+            </svg>
+        </div>
+        <div class="metric-info">
+            <div class="metric-label">Transactions</div>
+            <div class="metric-value">{{ total_txns }}</div>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon-box icon-teal">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"></path>
+            </svg>
+        </div>
+        <div class="metric-info">
+            <div class="metric-label">Active Loans</div>
+            <div class="metric-value">{{ active_loans }}</div>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-icon-box icon-red">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 21h18M3 7v14M21 7v14M6 7V3h12v4M10 11v2M14 11v2M10 17v2M14 17v2"></path>
+            </svg>
+        </div>
+        <div class="metric-info">
+            <div class="metric-label">Branches</div>
+            <div class="metric-value">{{ total_branches }}</div>
+        </div>
+    </div>
+</div>
+
+<!-- Dashboard 2-Column Split: Recent Transactions & Accounts Breakdown -->
+<div class="dashboard-columns">
+    <!-- Left Column: Recent Transactions -->
+    <div class="panel-card">
+        <div class="panel-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+            <span>Recent Transactions</span>
+        </div>
+
+        <div class="recent-txns-list">
+            {% if recent_txns %}
+                {% for txn in recent_txns %}
+                    <div class="txn-item">
+                        <div class="txn-left">
+                            <div class="txn-arrow {% if txn.txn_type in ('deposit', 'transfer_in') %}txn-in{% else %}txn-out{% endif %}">
+                                {% if txn.txn_type in ('deposit', 'transfer_in') %}↓{% else %}↑{% endif %}
+                            </div>
+                            <div>
+                                <div class="txn-name">{{ txn.first_name }} {{ txn.last_name }}</div>
+                                <div class="txn-date">{{ txn.created_at }} &bull; {{ txn.description }}</div>
+                            </div>
+                        </div>
+                        <div>
+                            {% if txn.txn_type in ('deposit', 'transfer_in') %}
+                                <span class="txn-amount-pill pill-green">+${{ "{:,.2f}".format(txn.amount) }}</span>
+                            {% else %}
+                                <span class="txn-amount-pill pill-red">-${{ "{:,.2f}".format(txn.amount) }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p style="color: var(--text-muted); font-size: 0.9rem; text-align: center; padding: 20px;">No transactions recorded yet.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Right Column: Accounts Breakdown -->
+    <div class="panel-card">
+        <div class="panel-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="20" x2="18" y2="10"></line>
+                <line x1="12" y1="20" x2="12" y2="4"></line>
+                <line x1="6" y1="20" x2="6" y2="14"></line>
+            </svg>
+            <span>Accounts Breakdown</span>
+        </div>
+
+        {% set total_accts_bal = (breakdown_savings.total or 0) + (breakdown_current.total or 0) %}
+        {% set savings_pct = ((breakdown_savings.total / total_accts_bal) * 100)|round|int if total_accts_bal > 0 else 50 %}
+        {% set current_pct = ((breakdown_current.total / total_accts_bal) * 100)|round|int if total_accts_bal > 0 else 50 %}
+
+        <div class="breakdown-row">
+            <div class="breakdown-header">
+                <span class="breakdown-title">Savings ({{ breakdown_savings.count or 0 }})</span>
+                <span class="breakdown-amount">${{ "{:,.2f}".format(breakdown_savings.total or 0) }}</span>
+            </div>
+            <div class="progress-track">
+                <div class="progress-bar bar-savings" style="width: {{ savings_pct }}%;"></div>
+            </div>
+        </div>
+
+        <div class="breakdown-row">
+            <div class="breakdown-header">
+                <span class="breakdown-title">Current ({{ breakdown_current.count or 0 }})</span>
+                <span class="breakdown-amount">${{ "{:,.2f}".format(breakdown_current.total or 0) }}</span>
+            </div>
+            <div class="progress-track">
+                <div class="progress-bar bar-current" style="width: {{ current_pct }}%;"></div>
+            </div>
+        </div>
+
+        <!-- Quick Banking Actions Card -->
+        <div style="margin-top: 32px; padding-top: 20px; border-top: 1px solid #f1f5f9;">
+            <div style="font-size: 0.88rem; font-weight: 600; color: #475569; margin-bottom: 12px;">Quick Operations</div>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <a href="{{ url_for('transactions') }}" class="btn btn-outline btn-sm">Deposit</a>
+                <a href="{{ url_for('transactions') }}" class="btn btn-outline btn-sm">Withdrawal</a>
+                <a href="{{ url_for('transactions') }}" class="btn btn-outline btn-sm">Transfer Funds</a>
+                <a href="{{ url_for('loans') }}" class="btn btn-outline btn-sm">Loans</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
