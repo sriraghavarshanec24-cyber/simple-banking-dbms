@@ -1,0 +1,215 @@
+{% extends "base.html" %}
+
+{% block title %}Customers{% endblock %}
+{% block page_title %}Customers{% endblock %}
+
+{% block content %}
+<div class="table-header-bar">
+    <div></div>
+    {% if current_role == 'admin' %}
+        <button class="btn btn-primary" data-modal-target="addCustomerModal">
+            <span>+ Add Customer</span>
+        </button>
+    {% endif %}
+</div>
+
+<div class="table-card">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>City</th>
+                <th>Branch</th>
+                <th>Accounts</th>
+                <th>Balance</th>
+                {% if current_role == 'admin' %}
+                    <th>Actions</th>
+                {% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for c in customers %}
+                <tr>
+                    <td class="id-badge">#{{ c.customer_id }}</td>
+                    <td><strong>{{ c.first_name }} {{ c.last_name }}</strong></td>
+                    <td>{{ c.email }}</td>
+                    <td>{{ c.phone }}</td>
+                    <td>{{ c.city }}</td>
+                    <td>{{ c.branch_name }}</td>
+                    <td>{{ c.account_count }}</td>
+                    <td><strong>${{ "{:,.2f}".format(c.total_balance) }}</strong></td>
+                    {% if current_role == 'admin' %}
+                        <td>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="btn-action-icon" title="Edit Customer"
+                                    onclick="openEditCustomer({{ c.customer_id }}, '{{ c.first_name }}', '{{ c.last_name }}', '{{ c.email }}', '{{ c.phone }}', '{{ c.address }}', '{{ c.city }}', '{{ c.dob }}', {{ c.branch_id }})">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M12 20h9"></path>
+                                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                                    </svg>
+                                </button>
+                                
+                                <form action="{{ url_for('delete_customer', customer_id=c.customer_id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete customer #{{ c.customer_id }} ({{ c.first_name }} {{ c.last_name }})?');">
+                                    <button type="submit" class="btn-action-icon btn-action-delete" title="Delete Customer">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <polyline points="3 6 5 6 21 6"></polyline>
+                                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                        </svg>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    {% endif %}
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Modal: Add Customer -->
+<div class="modal-overlay" id="addCustomerModal">
+    <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-header">
+            <h3>Add New Customer</h3>
+            <button class="btn-close-modal" data-modal-close>&times;</button>
+        </div>
+        <form action="{{ url_for('add_customer') }}" method="POST">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div class="form-group">
+                    <label class="form-label">First Name</label>
+                    <input type="text" name="first_name" class="form-control" placeholder="John" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Last Name</label>
+                    <input type="text" name="last_name" class="form-control" placeholder="Smith" required>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div class="form-group">
+                    <label class="form-label">Email Address</label>
+                    <input type="email" name="email" class="form-control" placeholder="john.smith@email.com" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Phone Number</label>
+                    <input type="text" name="phone" class="form-control" placeholder="555-0101" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Address</label>
+                <input type="text" name="address" class="form-control" placeholder="45 Elm Street" required>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div class="form-group">
+                    <label class="form-label">City</label>
+                    <input type="text" name="city" class="form-control" placeholder="New York" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Date of Birth</label>
+                    <input type="date" name="dob" class="form-control" value="1995-01-01" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Assigned Branch</label>
+                <select name="branch_id" class="form-control" required>
+                    {% for b in branches %}
+                        <option value="{{ b.branch_id }}">{{ b.name }} ({{ b.city }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div style="padding: 12px; background: #f8fafc; border-radius: 8px; margin-top: 10px; border: 1px dashed #cbd5e1;">
+                <span style="font-weight: 600; font-size: 0.85rem; color: #475569;">Initial Account Opening (Optional)</span>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 8px;">
+                    <div>
+                        <label class="form-label" style="font-size: 0.8rem;">Account Type</label>
+                        <select name="initial_account" class="form-control" style="padding: 7px;">
+                            <option value="none">None (Open Later)</option>
+                            <option value="savings" selected>Savings Account</option>
+                            <option value="current">Current Account</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label" style="font-size: 0.8rem;">Opening Deposit ($)</label>
+                        <input type="number" step="0.01" min="0" name="initial_deposit" class="form-control" style="padding: 7px;" value="1000.00">
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" data-modal-close>Cancel</button>
+                <button type="submit" class="btn btn-primary">Create Customer</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Edit Customer -->
+<div class="modal-overlay" id="editCustomerModal">
+    <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-header">
+            <h3>Edit Customer</h3>
+            <button class="btn-close-modal" data-modal-close>&times;</button>
+        </div>
+        <form id="editCustomerForm" method="POST">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div class="form-group">
+                    <label class="form-label">First Name</label>
+                    <input type="text" id="editCustFname" name="first_name" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Last Name</label>
+                    <input type="text" id="editCustLname" name="last_name" class="form-control" required>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" id="editCustEmail" name="email" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Phone</label>
+                    <input type="text" id="editCustPhone" name="phone" class="form-control" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Address</label>
+                <input type="text" id="editCustAddr" name="address" class="form-control" required>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div class="form-group">
+                    <label class="form-label">City</label>
+                    <input type="text" id="editCustCity" name="city" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Date of Birth</label>
+                    <input type="date" id="editCustDob" name="dob" class="form-control" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Branch</label>
+                <select id="editCustBranch" name="branch_id" class="form-control" required>
+                    {% for b in branches %}
+                        <option value="{{ b.branch_id }}">{{ b.name }} ({{ b.city }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" data-modal-close>Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
