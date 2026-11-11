@@ -1,0 +1,20 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environment
+.venv/
+env/
+venv/
+ENV/
+
+# Database files (database automatically self-initializes from schema.sql & seed.sql)
+*.sqlite3
+instance/
+
+# IDE & OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
