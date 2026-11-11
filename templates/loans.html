@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}Loan Management{% endblock %}
+{% block page_title %}Loans{% endblock %}
+
+{% block content %}
+<div class="table-header-bar">
+    <div></div>
+    <button class="btn btn-primary" data-modal-target="applyLoanModal">
+        <span>+ Apply for Loan</span>
+    </button>
+</div>
+
+<div class="table-card">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Customer</th>
+                <th>Type</th>
+                <th>Amount</th>
+                <th>Rate</th>
+                <th>Tenure</th>
+                <th>Status</th>
+                <th>Start Date</th>
+                {% if current_role == 'admin' %}
+                    <th>Actions</th>
+                {% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for l in loans %}
+                <tr>
+                    <td class="id-badge">#{{ l.loan_id }}</td>
+                    <td><strong>{{ l.first_name }} {{ l.last_name }}</strong></td>
+                    <td>
+                        <span class="badge" style="background-color: #f1f5f9; color: #475569;">
+                            {{ l.loan_type|upper }}
+                        </span>
+                    </td>
+                    <td><strong>${{ "{:,.2f}".format(l.amount) }}</strong></td>
+                    <td>{{ l.interest_rate }}%</td>
+                    <td>{{ l.tenure_months }} mo</td>
+                    <td>
+                        {% if l.status == 'approved' %}
+                            <span class="badge badge-approved">APPROVED</span>
+                        {% elif l.status == 'rejected' %}
+                            <span class="badge badge-rejected">REJECTED</span>
+                        {% elif l.status == 'pending' %}
+                            <span class="badge badge-pending">PENDING</span>
+                        {% else %}
+                            <span class="badge badge-closed">CLOSED</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ l.start_date or '—' }}</td>
+                    {% if current_role == 'admin' %}
+                        <td>
+                            <div style="display: flex; gap: 6px;">
+                                {% if l.status == 'pending' %}
+                                    <form action="{{ url_for('update_loan_status', loan_id=l.loan_id) }}" method="POST" style="display:inline;">
+                                        <input type="hidden" name="status" value="approved">
+                                        <button type="submit" class="btn btn-outline btn-sm" style="color: #059669; border-color: #a7f3d0;">Approve</button>
+                                    </form>
+                                    <form action="{{ url_for('update_loan_status', loan_id=l.loan_id) }}" method="POST" style="display:inline;">
+                                        <input type="hidden" name="status" value="rejected">
+                                        <button type="submit" class="btn btn-outline btn-sm" style="color: #dc2626; border-color: #fca5a5;">Reject</button>
+                                    </form>
+                                {% elif l.status == 'approved' %}
+                                    <form action="{{ url_for('update_loan_status', loan_id=l.loan_id) }}" method="POST" style="display:inline;">
+                                        <input type="hidden" name="status" value="closed">
+                                        <button type="submit" class="btn btn-outline btn-sm">Close</button>
+                                    </form>
+                                {% else %}
+                                    <span style="color: var(--text-muted); font-size: 0.8rem;">—</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                    {% endif %}
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Modal: Apply for Loan -->
+<div class="modal-overlay" id="applyLoanModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Apply for a Loan</h3>
+            <button class="btn-close-modal" data-modal-close>&times;</button>
+        </div>
+        <form action="{{ url_for('apply_loan') }}" method="POST">
+            {% if current_role == 'admin' %}
+                <div class="form-group">
+                    <label class="form-label">Select Customer</label>
+                    <select name="customer_id" class="form-control" required>
+                        {% for c in customers %}
+                            <option value="{{ c.customer_id }}">{{ c.first_name }} {{ c.last_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            {% endif %}
+
+            <div class="form-group">
+                <label class="form-label">Loan Purpose / Type</label>
+                <select name="loan_type" class="form-control" required>
+                    <option value="personal">Personal Loan (10.5% APR)</option>
+                    <option value="home">Home / Mortgage Loan (7.5% APR)</option>
+                    <option value="auto">Auto Vehicle Loan (8.0% APR)</option>
+                    <option value="education">Education Loan (6.5% APR)</option>
+                    <option value="business">Business Expansion Loan (9.0% APR)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Requested Loan Amount ($)</label>
+                <input type="number" step="100" min="500" name="amount" class="form-control" placeholder="e.g. 15000.00" value="15000.00" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Tenure (in Months)</label>
+                <select name="tenure_months" class="form-control" required>
+                    <option value="12">12 Months (1 Year)</option>
+                    <option value="24">24 Months (2 Years)</option>
+                    <option value="36" selected>36 Months (3 Years)</option>
+                    <option value="48">48 Months (4 Years)</option>
+                    <option value="60">60 Months (5 Years)</option>
+                    <option value="120">120 Months (10 Years)</option>
+                    <option value="240">240 Months (20 Years)</option>
+                </select>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" data-modal-close>Cancel</button>
+                <button type="submit" class="btn btn-primary">Submit Application</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
