@@ -1,0 +1,256 @@
+{% extends "base.html" %}
+
+{% block title %}Transactions & Banking Operations{% endblock %}
+{% block page_title %}Transactions{% endblock %}
+
+{% block content %}
+<div class="table-header-bar">
+    <div style="display: flex; gap: 10px;">
+        <button class="btn btn-primary" data-modal-target="depositModal">
+            <span>↓ Deposit Money</span>
+        </button>
+        <button class="btn btn-outline" data-modal-target="withdrawModal" style="border-color: #fca5a5; color: #dc2626;">
+            <span>↑ Withdraw Funds</span>
+        </button>
+        <button class="btn btn-outline" data-modal-target="transferModal">
+            <span>⇄ Transfer Funds</span>
+        </button>
+    </div>
+</div>
+
+<!-- Active User Accounts Quick Balance Bar -->
+<div style="background: #ffffff; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 18px 24px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px;">
+    <div>
+        <span style="font-size: 0.82rem; text-transform: uppercase; font-weight: 700; color: var(--text-muted); display: block;">Active Operational Accounts</span>
+        <span style="font-size: 1rem; font-weight: 600; color: #1e293b;">Select an account to review or execute instant transactions</span>
+    </div>
+    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        {% for ua in user_accounts[:4] %}
+            <div style="background: #f8fafc; border: 1px solid var(--border-color); padding: 8px 14px; border-radius: 8px; font-size: 0.85rem;">
+                <span style="color: var(--text-muted);">#{{ ua.account_id }} ({{ ua.account_type|capitalize }}):</span>
+                <strong style="color: #0f172a; margin-left: 4px;">${{ "{:,.2f}".format(ua.balance) }}</strong>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="table-card">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Txn ID</th>
+                <th>Account</th>
+                <th>Customer</th>
+                <th>Type</th>
+                <th>Amount</th>
+                <th>Details / Description</th>
+                <th>Date & Time</th>
+                <th>Receipt</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for t in transactions %}
+                <tr>
+                    <td class="id-badge">#{{ t.txn_id }}</td>
+                    <td><strong>Acct #{{ t.account_id }}</strong> ({{ t.account_type|capitalize }})</td>
+                    <td>{{ t.first_name }} {{ t.last_name }}</td>
+                    <td>
+                        {% if t.txn_type == 'deposit' %}
+                            <span class="badge badge-active">DEPOSIT</span>
+                        {% elif t.txn_type == 'withdrawal' %}
+                            <span class="badge badge-rejected">WITHDRAWAL</span>
+                        {% elif t.txn_type == 'transfer_in' %}
+                            <span class="badge badge-active">TRANSFER IN</span>
+                        {% else %}
+                            <span class="badge badge-pending">TRANSFER OUT</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if t.txn_type in ('deposit', 'transfer_in') %}
+                            <span style="font-weight: 700; color: #059669;">+${{ "{:,.2f}".format(t.amount) }}</span>
+                        {% else %}
+                            <span style="font-weight: 700; color: #dc2626;">-${{ "{:,.2f}".format(t.amount) }}</span>
+                        {% endif %}
+                    </td>
+                    <td style="color: var(--text-secondary); max-width: 250px;">{{ t.description }}</td>
+                    <td>{{ t.created_at }}</td>
+                    <td>
+                        <button class="btn btn-outline btn-sm" onclick="showReceipt({{ t.txn_id }}, {{ t.account_id }}, '{{ t.first_name }} {{ t.last_name }}', '{{ t.txn_type }}', {{ t.amount }}, '{{ t.description }}', '{{ t.created_at }}')">
+                            Receipt
+                        </button>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Modal: Deposit (Module 3.3) -->
+<div class="modal-overlay" id="depositModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Deposit Money</h3>
+            <button class="btn-close-modal" data-modal-close>&times;</button>
+        </div>
+        <form action="{{ url_for('deposit') }}" method="POST">
+            <div class="form-group">
+                <label class="form-label">Target Account</label>
+                <select name="account_id" class="form-control" required>
+                    {% for ua in user_accounts %}
+                        <option value="{{ ua.account_id }}">
+                            Acct #{{ ua.account_id }} - {{ ua.first_name }} {{ ua.last_name }} ({{ ua.account_type|capitalize }} - Current: ${{ "{:,.2f}".format(ua.balance) }})
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Deposit Amount ($)</label>
+                <input type="number" step="0.01" min="1" name="amount" class="form-control" placeholder="e.g. 500.00" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Description / Remarks</label>
+                <input type="text" name="description" class="form-control" value="Cash deposit" placeholder="Cash deposit / Salary / Check">
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" data-modal-close>Cancel</button>
+                <button type="submit" class="btn btn-primary" style="background-color: var(--success);">Confirm Deposit</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Withdrawal (Module 3.4) -->
+<div class="modal-overlay" id="withdrawModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Withdraw Funds</h3>
+            <button class="btn-close-modal" data-modal-close>&times;</button>
+        </div>
+        <form action="{{ url_for('withdraw') }}" method="POST">
+            <div class="form-group">
+                <label class="form-label">Select Account</label>
+                <select name="account_id" class="form-control" required>
+                    {% for ua in user_accounts %}
+                        <option value="{{ ua.account_id }}">
+                            Acct #{{ ua.account_id }} - {{ ua.first_name }} {{ ua.last_name }} (Available: ${{ "{:,.2f}".format(ua.balance) }})
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Withdrawal Amount ($)</label>
+                <input type="number" step="0.01" min="1" name="amount" class="form-control" placeholder="e.g. 200.00" required>
+                <small style="color: var(--text-muted); display: block; margin-top: 4px;">System validates sufficient balance automatically (overdraft prevention).</small>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Description</label>
+                <input type="text" name="description" class="form-control" value="ATM withdrawal" placeholder="ATM withdrawal / Cash out">
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" data-modal-close>Cancel</button>
+                <button type="submit" class="btn btn-primary" style="background-color: var(--danger);">Confirm Withdrawal</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Transfer -->
+<div class="modal-overlay" id="transferModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Transfer Funds (ACID Transaction)</h3>
+            <button class="btn-close-modal" data-modal-close>&times;</button>
+        </div>
+        <form action="{{ url_for('transfer') }}" method="POST">
+            <div class="form-group">
+                <label class="form-label">From Account (Source)</label>
+                <select name="from_account_id" class="form-control" required>
+                    {% for ua in user_accounts %}
+                        <option value="{{ ua.account_id }}">
+                            Acct #{{ ua.account_id }} - {{ ua.first_name }} {{ ua.last_name }} (${{ "{:,.2f}".format(ua.balance) }})
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">To Account (Destination)</label>
+                <select name="to_account_id" class="form-control" required>
+                    {% for dest in all_active_accounts %}
+                        <option value="{{ dest.account_id }}">
+                            Acct #{{ dest.account_id }} - {{ dest.first_name }} {{ dest.last_name }} ({{ dest.account_type|capitalize }})
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Transfer Amount ($)</label>
+                <input type="number" step="0.01" min="1" name="amount" class="form-control" placeholder="e.g. 250.00" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Note / Purpose</label>
+                <input type="text" name="description" class="form-control" value="Fund Transfer" placeholder="e.g. Rent payment / Gift">
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" data-modal-close>Cancel</button>
+                <button type="submit" class="btn btn-primary">Process Transfer</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Transaction Receipt -->
+<div class="modal-overlay" id="receiptModal">
+    <div class="modal-content" style="max-width: 440px; text-align: center;">
+        <div style="margin-bottom: 16px;">
+            <div style="font-size: 1.5rem; font-weight: 700; color: var(--primary);">NexBank</div>
+            <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Official Transaction Receipt</div>
+        </div>
+
+        <div style="background: #f8fafc; border: 1px dashed var(--border-color); border-radius: 8px; padding: 18px; margin-bottom: 20px; text-align: left; font-size: 0.9rem;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                <span style="color: var(--text-muted);">Reference ID:</span>
+                <strong id="receiptTxnId"></strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                <span style="color: var(--text-muted);">Account:</span>
+                <strong id="receiptAcct"></strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                <span style="color: var(--text-muted);">Customer:</span>
+                <strong id="receiptCust"></strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                <span style="color: var(--text-muted);">Type:</span>
+                <strong id="receiptType"></strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                <span style="color: var(--text-muted);">Amount:</span>
+                <strong id="receiptAmount" style="color: var(--primary); font-size: 1.1rem;"></strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                <span style="color: var(--text-muted);">Description:</span>
+                <span id="receiptDesc"></span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--text-muted);">Date & Time:</span>
+                <span id="receiptDate"></span>
+            </div>
+        </div>
+
+        <div style="display: flex; justify-content: center; gap: 12px;">
+            <button class="btn btn-outline" onclick="window.print()">Print</button>
+            <button class="btn btn-primary" data-modal-close>Close</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
