@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Dashboard{% endblock %} - NexBank</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar matching screenshots -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="{{ url_for('dashboard') }}" class="brand-logo">
+                    <!-- Bank Landmark SVG Icon -->
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="3" y1="21" x2="21" y2="21"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                        <polyline points="5 6 12 3 19 6"></polyline>
+                        <line x1="4" y1="10" x2="4" y2="21"></line>
+                        <line x1="20" y1="10" x2="20" y2="21"></line>
+                        <line x1="8" y1="14" x2="8" y2="17"></line>
+                        <line x1="12" y1="14" x2="12" y2="17"></line>
+                        <line x1="16" y1="14" x2="16" y2="17"></line>
+                    </svg>
+                    <span>NexBank</span>
+                </a>
+            </div>
+
+            <ul class="sidebar-nav">
+                <li>
+                    <a href="{{ url_for('dashboard') }}" class="{% if request.endpoint == 'dashboard' %}active{% endif %}">
+                        <!-- Dashboard Icon -->
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="14" width="7" height="7"></rect>
+                            <rect x="3" y="14" width="7" height="7"></rect>
+                        </svg>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('branches') }}" class="{% if request.endpoint == 'branches' %}active{% endif %}">
+                        <!-- Branches Icon -->
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 21h18M3 7v14M21 7v14M6 7V3h12v4M10 11v2M14 11v2M10 17v2M14 17v2"></path>
+                        </svg>
+                        <span>Branches</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('customers') }}" class="{% if request.endpoint == 'customers' %}active{% endif %}">
+                        <!-- Customers Icon -->
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                        </svg>
+                        <span>Customers</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('accounts') }}" class="{% if request.endpoint == 'accounts' %}active{% endif %}">
+                        <!-- Accounts Icon -->
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="5" width="20" height="14" rx="2"></rect>
+                            <line x1="2" y1="10" x2="22" y2="10"></line>
+                        </svg>
+                        <span>Accounts</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('transactions') }}" class="{% if request.endpoint == 'transactions' %}active{% endif %}">
+                        <!-- Transactions Icon -->
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="17 1 21 5 17 9"></polyline>
+                            <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
+                            <polyline points="7 23 3 19 7 15"></polyline>
+                            <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
+                        </svg>
+                        <span>Transactions</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('loans') }}" class="{% if request.endpoint == 'loans' %}active{% endif %}">
+                        <!-- Loans Icon -->
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="1" x2="12" y2="23"></line>
+                            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                        </svg>
+                        <span>Loans</span>
+                    </a>
+                </li>
+            </ul>
+
+            <div class="sidebar-footer">
+                <span>MySQL • DBMS Project</span>
+            </div>
+        </aside>
+
+        <!-- Main Wrapper -->
+        <div class="main-wrapper">
+            <header class="top-navbar">
+                <h1 class="page-title">{% block page_title %}Dashboard{% endblock %}</h1>
+                <div class="top-nav-right">
+                    <div class="search-box">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                        <input type="text" id="tableSearch" placeholder="Search...">
+                    </div>
+                    
+                    <div class="user-badge">
+                        <div class="user-avatar">{{ current_user[0]|upper if current_user else 'U' }}</div>
+                        <span>{{ current_user|capitalize }} ({{ current_role|capitalize }})</span>
+                        <a href="{{ url_for('logout') }}" class="btn-logout">Logout</a>
+                    </div>
+                </div>
+            </header>
+
+            <main class="content-body">
+                <!-- Flash Messages -->
+                <div class="flash-container">
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category }}">
+                                    <span>{{ message }}</span>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+                </div>
+
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>
