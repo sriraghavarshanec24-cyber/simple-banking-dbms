@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block title %}Branches{% endblock %}
+{% block page_title %}Branches{% endblock %}
+
+{% block content %}
+<div class="table-header-bar">
+    <div></div>
+    {% if current_role == 'admin' %}
+        <button class="btn btn-primary" data-modal-target="addBranchModal">
+            <span>+ Add Branch</span>
+        </button>
+    {% endif %}
+</div>
+
+<div class="table-card">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Address</th>
+                <th>City</th>
+                <th>Phone</th>
+                <th>Customers</th>
+                {% if current_role == 'admin' %}
+                    <th>Actions</th>
+                {% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for b in branches %}
+                <tr>
+                    <td class="id-badge">#{{ b.branch_id }}</td>
+                    <td><strong>{{ b.name }}</strong></td>
+                    <td>{{ b.address }}</td>
+                    <td>{{ b.city }}</td>
+                    <td>{{ b.phone }}</td>
+                    <td>{{ b.customer_count }}</td>
+                    {% if current_role == 'admin' %}
+                        <td>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="btn-action-icon" title="Edit Branch"
+                                    onclick="openEditBranch({{ b.branch_id }}, '{{ b.name }}', '{{ b.address }}', '{{ b.city }}', '{{ b.phone }}')">
+                                    <!-- Edit Pencil SVG -->
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M12 20h9"></path>
+                                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                                    </svg>
+                                </button>
+                                
+                                <form action="{{ url_for('delete_branch', branch_id=b.branch_id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete branch #{{ b.branch_id }}?');">
+                                    <button type="submit" class="btn-action-icon btn-action-delete" title="Delete Branch">
+                                        <!-- Trash Can SVG -->
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <polyline points="3 6 5 6 21 6"></polyline>
+                                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                        </svg>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    {% endif %}
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Modal: Add Branch -->
+<div class="modal-overlay" id="addBranchModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Add New Branch</h3>
+            <button class="btn-close-modal" data-modal-close>&times;</button>
+        </div>
+        <form action="{{ url_for('add_branch') }}" method="POST">
+            <div class="form-group">
+                <label class="form-label">Branch Name</label>
+                <input type="text" name="name" class="form-control" placeholder="e.g. Downtown Main Branch" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Street Address</label>
+                <input type="text" name="address" class="form-control" placeholder="e.g. 100 Main Street" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">City</label>
+                <input type="text" name="city" class="form-control" placeholder="e.g. New York" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Phone Number</label>
+                <input type="text" name="phone" class="form-control" placeholder="e.g. 212-555-0100" required>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" data-modal-close>Cancel</button>
+                <button type="submit" class="btn btn-primary">Create Branch</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Edit Branch -->
+<div class="modal-overlay" id="editBranchModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Edit Branch Details</h3>
+            <button class="btn-close-modal" data-modal-close>&times;</button>
+        </div>
+        <form id="editBranchForm" method="POST">
+            <div class="form-group">
+                <label class="form-label">Branch Name</label>
+                <input type="text" id="editBranchName" name="name" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Street Address</label>
+                <input type="text" id="editBranchAddress" name="address" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">City</label>
+                <input type="text" id="editBranchCity" name="city" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Phone Number</label>
+                <input type="text" id="editBranchPhone" name="phone" class="form-control" required>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" data-modal-close>Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
